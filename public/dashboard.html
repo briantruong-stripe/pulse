@@ -40,12 +40,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
     }
 
-    .logo-mark-wrap img {
-      width: 60%;
-      height: auto;
+    .logo-mark-wrap span {
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.5px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     .auth-logo .logo-mark-wrap {
@@ -55,11 +56,15 @@
       box-shadow: 0 8px 30px rgba(99,91,255,0.4);
     }
 
+    .auth-logo .logo-mark-wrap span { font-size: 26px; }
+
     .header-logo-wrap {
       width: 40px;
       height: 40px;
       box-shadow: 0 4px 15px rgba(99,91,255,0.3);
     }
+
+    .header-logo-wrap span { font-size: 19px; }
 
     /* ── AUTH GATE ── */
     #auth-gate {
@@ -658,7 +663,7 @@
   <div class="auth-card">
     <div class="auth-logo">
       <div class="logo-mark-wrap">
-        <img src="/stripe-mark.svg" alt="Stripe" onerror="this.style.opacity='0'" />
+        <span>S</span>
       </div>
     </div>
     <h2>Pulse Dashboard</h2>
@@ -674,7 +679,8 @@
   <header>
     <div class="header-left">
       <div class="logo-mark-wrap header-logo-wrap">
-        <img src="/stripe-mark.svg" alt="Stripe" onerror="this.style.opacity='0'" /></div>
+        <span>S</span>
+      </div>
       <div class="header-title">
         <h1>Pulse</h1>
         <p>Brian Truong · SA Development</p>
