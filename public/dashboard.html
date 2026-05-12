@@ -346,7 +346,7 @@
     /* ── L4 SA LADDER ── */
     .ladder-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
       margin-bottom: 56px;
     }
@@ -629,7 +629,7 @@
     <div class="buckets-grid" id="buckets-grid"></div>
 
     <!-- L4 SA LADDER -->
-    <div class="section-title">L4 SA Ladder Alignment</div>
+    <div class="section-title">L4 SA Ladder — Deploying Expertise</div>
     <p style="font-size:13px;color:var(--text-muted);margin-top:-12px;margin-bottom:18px;">
       Signal strength derived from keyword analysis across collected feedback. Cross-reference with the <a href="https://docs.google.com/spreadsheets/d/1odWpXw3z2_CJgDS1TaqE_JiVsi-JGUwp_WJXlGTf0IE/" target="_blank" style="color:var(--purple-light);">official L4 SA Ladder ↗</a>.
     </p>
@@ -696,93 +696,51 @@ const PRINCIPLES = [
 
 const LADDER = [
   {
-    id: 'expertise',
-    title: 'Deploying Expertise',
-    subtitle: 'Domain mastery, competitive depth, business cases, C-suite engagement',
-    icon: '🔬',
+    id: 'users',
+    title: 'Users',
+    subtitle: 'Critical Thinking & Getting Things Done',
+    icon: '🎯',
     color: '#635BFF',
     bg: 'rgba(99,91,255,0.15)',
-    keywords: ['technical', 'competitive', 'domain', 'expert', 'architect', 'business case', 'roi', 'cpo', 'cto', 'product', 'market', 'solution', 'industry', 'roadmap', 'innovation', 'anticipat', 'mitigat'],
+    keywords: ['technical', 'domain', 'expert', 'architect', 'business case', 'roi', 'cpo', 'cto', 'competitive', 'market', 'solution', 'industry', 'roadmap', 'scope', 'problem', 'impact', 'priorit', 'anticipat', 'mitigat', 'clarity', 'structured', 'recommend', 'analysis', 'insight', 'strategic'],
     bullets: [
+      'Independently defines problem scope and drives to the right solution',
+      'Builds business cases and ROI models that resonate with C-suite stakeholders',
+      'Anticipates customer needs and mitigates risks before they surface',
       'Expert in a product domain or industry vertical',
-      'Leads account planning and builds financial business cases',
-      'Engages CPO/CTO-level technical leaders',
-      'Understands competitive landscape, weaknesses, and strategy',
-    ],
-  },
-  {
-    id: 'customer',
-    title: 'Strategic Customer Engagement',
-    subtitle: 'Senior stakeholders, trusted advisor, account growth',
-    icon: '🤝',
-    color: '#3ECF8E',
-    bg: 'rgba(62,207,142,0.12)',
-    keywords: ['trusted advisor', 'strategic customer', 'senior stakeholder', 'executive', 'geo', 'segment', 'account growth', 'deal', 'champion', 'head of payments', 'cpo', 'cto'],
-    bullets: [
-      'Recognised industry expert at Geo & Segment level',
-      'Acts as trusted advisor to senior customer stakeholders',
-      'Leads strategic deals and account growth planning with AE',
-      'Delivers ROI models demonstrating tangible business value',
-    ],
-  },
-  {
-    id: 'operations',
-    title: 'Operational Excellence',
-    subtitle: 'Cross-functional leadership, initiative, management influence',
-    icon: '📊',
-    color: '#F5A623',
-    bg: 'rgba(245,166,35,0.12)',
-    keywords: ['cross-functional', 'initiative', 'management', 'lead', 'implement', 'accountabl', 'course-correct', 'impact', 'direction', 'scope', 'best case', 'regional', 'segment', 'standard'],
-    bullets: [
-      'Manages multiple cross-functional initiatives without direction',
-      'Sets group standards; role model for senior team members',
-      'Business cases influence management goals and are used as team examples',
-      'Key contributor to Stripe product roadmap',
+      'Understands competitive landscape and translates it into winning strategies',
     ],
   },
   {
     id: 'community',
-    title: 'Community & Thought Leadership',
-    subtitle: 'Mentorship, events, EBCs, education, SFDC excellence',
-    icon: '🌐',
-    color: '#00A2FF',
-    bg: 'rgba(0,162,255,0.12)',
-    keywords: ['mentor', 'community', 'webinar', 'event', 'ebc', 'spin-up', 'collateral', 'interview', 'force multiplier', 'sfdc', 'best practice', 'lesson', 'educate', 'partner', 'proserve', 'library'],
+    title: 'Community',
+    subtitle: 'Working with Others',
+    icon: '🤝',
+    color: '#3ECF8E',
+    bg: 'rgba(62,207,142,0.12)',
+    keywords: ['collaborate', 'mentor', 'team', 'cross-functional', 'partner', 'align', 'communicate', 'listen', 'feedback', 'empower', 'support', 'relationship', 'stakeholder', 'influence', 'ebc', 'event', 'interview', 'force multiplier', 'educate', 'proserve', 'community', 'webinar', 'inclusion', 'diverse', 'empathy'],
     bullets: [
-      'Leads EBCs and solution architecture discussions',
+      'Trusted advisor to senior customer stakeholders and internal partners',
       'Mentors multiple Stripes on technical skills and career trajectory',
-      'Evangelises SFDC best practices; identified and improved metric tracking',
-      'Conducts technical interviews; contributes to interview process',
+      'Leads EBCs and cross-functional solution architecture discussions',
+      'Conducts technical interviews; shapes the interview process',
+      'Amplifies others — acts as a force multiplier across the team',
     ],
   },
   {
-    id: 'culture',
-    title: 'Stripe Culture & Ownership',
-    subtitle: 'Operating principles, inclusivity, modeling ownership',
+    id: 'company',
+    title: 'Company',
+    subtitle: 'Company Building & Acting Like an Owner',
     icon: '🏛️',
-    color: '#EC4899',
-    bg: 'rgba(236,72,153,0.12)',
-    keywords: ['ownership', 'operating principles', 'diversity', 'inclusive', 'mission', 'model', 'culture', 'best interest', 'communicat', 'values', 'building'],
+    color: '#F5A623',
+    bg: 'rgba(245,166,35,0.12)',
+    keywords: ['ownership', 'owner', 'initiative', 'accountabl', 'sfdc', 'best practice', 'standard', 'product feedback', 'roadmap', 'demand gen', 'pipeline', 'revenue', 'build', 'scale', 'operating principle', 'mission', 'values', 'culture', 'inclusive', 'diversity', 'proactive', 'long-term', 'segment', 'geo'],
     bullets: [
-      'Acts in best interest of Stripe; models ownership for all Stripes',
-      'Actively uses operating principles to guide and explain decisions',
-      'Effectively communicates the importance of company-building activities',
+      'Acts in the best interest of Stripe; models ownership for all Stripes',
+      'Sets team standards; business cases used as examples by management',
+      'Evangelises SFDC best practices; identifies and improves metric tracking',
+      'Key contributor to Stripe product roadmap through structured feedback',
       'Actively works to increase Stripe\'s inclusivity and diversity',
-    ],
-  },
-  {
-    id: 'product',
-    title: 'Product Influence & Demand Gen',
-    subtitle: 'Events, product feedback, innovative engagements, roadmap input',
-    icon: '🚀',
-    color: '#8B5CF6',
-    bg: 'rgba(139,92,246,0.12)',
-    keywords: ['demand gen', 'product market fit', 'roadmap workshop', 'art of the possible', 'webinar series', 'innovative', 'quantify', 'ebc', 'product feedback', 'workshop', 'segment', 'geo', 'demo'],
-    bullets: [
-      'Tech lead in events driving demand generation (workshops, webinars)',
-      'Works with product team to fine-tune product-market fit with customer demand',
-      'Gathers feedback across users, segments, and geos to help product prioritize',
-      'Leads innovative engagements: Roadmap Planning Workshops, Art of the Possible demos',
     ],
   },
 ];
