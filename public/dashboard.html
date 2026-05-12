@@ -852,16 +852,20 @@ function fmtDate(iso) {
 // ── AUTO LOAD ─────────────────────────────────────────────────────────────────
 
 async function loadDashboard() {
+  let feedback = [], pipeline = { available: false };
   try {
     const [fbRes, pipeRes] = await Promise.all([
       fetch('/api/feedback'),
       fetch('/api/pipeline'),
     ]);
-    const [feedback, pipeline] = await Promise.all([fbRes.json(), pipeRes.json()]);
-    initDashboard(feedback, pipeline);
+    [feedback, pipeline] = await Promise.all([
+      fbRes.ok ? fbRes.json() : Promise.resolve([]),
+      pipeRes.ok ? pipeRes.json() : Promise.resolve({ available: false }),
+    ]);
   } catch (err) {
-    console.error('Failed to load dashboard:', err);
+    console.error('API error:', err);
   }
+  initDashboard(feedback, pipeline);
 }
 
 loadDashboard();

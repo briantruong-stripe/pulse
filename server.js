@@ -6,7 +6,10 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DASHBOARD_KEY = process.env.DASHBOARD_KEY || 'sa-atr';
-const DATA_FILE = path.join(__dirname, 'data', 'feedback.json');
+// Vercel's serverless filesystem is read-only except /tmp
+const DATA_FILE = process.env.VERCEL
+  ? '/tmp/feedback.json'
+  : path.join(__dirname, 'data', 'feedback.json');
 
 const USE_SHEETS = !!(process.env.GOOGLE_SERVICE_ACCOUNT_KEY && process.env.GOOGLE_SHEETS_ID);
 const USE_SFDC = !!(process.env.SFDC_USERNAME && process.env.SFDC_PASSWORD);
