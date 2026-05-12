@@ -11,8 +11,55 @@ const DATA_FILE = process.env.VERCEL
   ? '/tmp/feedback.json'
   : path.join(__dirname, 'data', 'feedback.json');
 
-const USE_SHEETS = !!(process.env.GOOGLE_SERVICE_ACCOUNT_KEY && process.env.GOOGLE_SHEETS_ID);
+const USE_SUPABASE = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
+const USE_SHEETS = !USE_SUPABASE && !!(process.env.GOOGLE_SERVICE_ACCOUNT_KEY && process.env.GOOGLE_SHEETS_ID);
 const USE_SFDC = !!(process.env.SFDC_USERNAME && process.env.SFDC_PASSWORD);
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
+
+let _supabase = null;
+
+function getSupabaseClient() {
+  if (_supabase) return _supabase;
+  const { createClient } = require('@supabase/supabase-js');
+  _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  return _supabase;
+}
+
+async function loadFromSupabase() {
+  const sb = getSupabaseClient();
+  const { data, error } = await sb.from('feedback').select('*').order('timestamp', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data.map(r => ({
+    id: r.id,
+    timestamp: r.timestamp,
+    name: r.name,
+    role: r.role || '',
+    context: r.context || '',
+    sfdcOppName: r.sfdc_opp_name || '',
+    sfdcOppId: r.sfdc_opp_id || '',
+    sfdcUrl: r.sfdc_url || '',
+    doneWell: r.done_well,
+    couldBeBetter: r.could_be_better,
+  }));
+}
+
+async function appendToSupabase(entry) {
+  const sb = getSupabaseClient();
+  const { error } = await sb.from('feedback').insert({
+    id: entry.id,
+    timestamp: entry.timestamp,
+    name: entry.name,
+    role: entry.role,
+    context: entry.context,
+    sfdc_opp_name: entry.sfdcOppName,
+    sfdc_opp_id: entry.sfdcOppId,
+    sfdc_url: entry.sfdcUrl,
+    done_well: entry.doneWell,
+    could_be_better: entry.couldBeBetter,
+  });
+  if (error) throw new Error(error.message);
+}
 
 // ── Google Sheets ─────────────────────────────────────────────────────────────
 
@@ -107,11 +154,14 @@ function appendToLocal(entry) {
 // ── Unified storage ───────────────────────────────────────────────────────────
 
 async function loadFeedback() {
-  return USE_SHEETS ? loadFromSheets() : loadFromLocal();
+  if (USE_SUPABASE) return loadFromSupabase();
+  if (USE_SHEETS) return loadFromSheets();
+  return loadFromLocal();
 }
 
 async function saveFeedback(entry) {
-  if (USE_SHEETS) await appendToSheets(entry);
+  if (USE_SUPABASE) await appendToSupabase(entry);
+  else if (USE_SHEETS) await appendToSheets(entry);
   else appendToLocal(entry);
 }
 
@@ -249,7 +299,7 @@ if (require.main === module) {
     console.log(`\n✅  Pulse  http://localhost:${PORT}`);
     console.log(`📋  Form   http://localhost:${PORT}`);
     console.log(`🔐  Dash   http://localhost:${PORT}/dashboard  (key: ${DASHBOARD_KEY})`);
-    console.log(`📊  Sheets ${USE_SHEETS ? '✓ enabled' : '✗ local JSON'}`);
+    console.log(`🗄️   Store  ${USE_SUPABASE ? '✓ Supabase' : USE_SHEETS ? '✓ Google Sheets' : '✗ local JSON'}`);
     console.log(`☁️   SFDC   ${USE_SFDC ? '✓ enabled' : '✗ not configured'}\n`);
   });
 }
