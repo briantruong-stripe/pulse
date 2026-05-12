@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Feedback — Brian Truong</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --stripe-purple: #635BFF;
+      --stripe-light: #F6F9FC;
+      --text-primary: #1A1A2E;
+      --text-secondary: #6B7280;
+      --border: #E5E7EB;
+      --success: #10B981;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--stripe-light);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 20px 60px -10px rgba(99,91,255,0.12);
+      padding: 48px 48px 40px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .logo-text {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .logo-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    label .optional {
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: white;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+      resize: vertical;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #9CA3AF;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--stripe-purple);
+      box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+    }
+
+    textarea { min-height: 88px; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    .feedback-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-green { background: #10B981; }
+    .dot-amber { background: #F59E0B; }
+
+    .sfdc-link-row {
+      margin-top: 6px;
+      display: none;
+    }
+
+    .sfdc-link-row a {
+      font-size: 12px;
+      color: var(--stripe-purple);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sfdc-link-row a:hover { text-decoration: underline; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #635BFF, #4B44CC);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+
+    button[type="submit"]:hover {
+      box-shadow: 0 8px 25px rgba(99, 91, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    button[type="submit"]:active { transform: translateY(0); }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .success {
+      display: none;
+      text-align: center;
+      padding: 32px 0;
+    }
+
+    .success-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+
+    .success h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .success p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+
+    .another-btn {
+      padding: 10px 24px;
+      background: var(--stripe-light);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .another-btn:hover { background: #EEF0F5; }
+
+    .transparency-note {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: rgba(99, 91, 255, 0.06);
+      border-radius: 8px;
+      border-left: 3px solid var(--stripe-purple);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .transparency-note strong { color: var(--text-primary); }
+
+    @media (max-width: 540px) {
+      .card { padding: 32px 24px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="form-card">
+    <div class="logo">
+      <!-- Stripe parallelogram mark -->
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="fg1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7C72FF"/>
+            <stop offset="1" stop-color="#4338CA"/>
+          </linearGradient>
+        </defs>
+        <rect width="36" height="36" rx="8" fill="url(#fg1)"/>
+        <path d="M7 10 L24 10 L28.5 17 L11.5 17 Z" fill="white"/>
+        <path d="M7 20 L24 20 L28.5 27 L11.5 27 Z" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+      <div>
+        <div class="logo-text">Pulse</div>
+        <div class="logo-sub">Quick feedback for Brian</div>
+      </div>
+    </div>
+
+    <h1>Leave a quick note</h1>
+    <p class="subtitle">Takes 90 seconds. Honest, pointed feedback — what landed, what didn't. Goes directly to Brian and his manager.</p>
+
+    <form id="feedback-form">
+      <div class="field-row">
+        <div class="field">
+          <label for="name">Your name</label>
+          <input type="text" id="name" name="name" placeholder="John Collison" required />
+        </div>
+        <div class="field">
+          <label for="role">Your role <span class="optional">(optional)</span></label>
+          <input type="text" id="role" name="role" placeholder="AE, CSM, Partner..." />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="context">Meeting or context <span class="optional">(optional)</span></label>
+        <input type="text" id="context" name="context" placeholder="e.g. Acme Corp demo, QBR prep call..." />
+      </div>
+
+      <!-- SFDC opportunity dropdown — shown only when SFDC is configured -->
+      <div class="field" id="sfdc-field" style="display:none;">
+        <label for="sfdc-opp">Salesforce opportunity <span class="optional">(optional)</span></label>
+        <select id="sfdc-opp">
+          <option value="">— Link to an open opportunity —</option>
+        </select>
+        <div class="sfdc-link-row" id="sfdc-link-row">
+          <a href="#" id="sfdc-link-a" target="_blank" rel="noopener">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H5M10 2V7" stroke="#635BFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            View in Salesforce
+          </a>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-label">Feedback</div>
+
+      <div class="field">
+        <label class="feedback-label" for="doneWell">
+          <span class="dot dot-green"></span>
+          What worked well
+        </label>
+        <textarea id="doneWell" name="doneWell" placeholder="What should Brian keep doing? Be specific." required></textarea>
+      </div>
+
+      <div class="field">
+        <label class="feedback-label" for="couldBeBetter">
+          <span class="dot dot-amber"></span>
+          What could be sharper
+        </label>
+        <textarea id="couldBeBetter" name="couldBeBetter" placeholder="What's one thing that could've been stronger?" required></textarea>
+      </div>
+
+      <div class="transparency-note">
+        <strong>Not anonymous.</strong> Your name is attached to this feedback. It goes directly to Brian and his leadership — not to the broader team.
+      </div>
+
+      <button type="submit" id="submit-btn">Send feedback</button>
+    </form>
+
+    <div class="success" id="success-state">
+      <div class="success-icon">✓</div>
+      <h2>Thanks for the feedback</h2>
+      <p>It goes a long way — Brian reads every entry.</p>
+      <button class="another-btn" onclick="resetForm()">Submit another</button>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('feedback-form');
+    const btn = document.getElementById('submit-btn');
+    const successState = document.getElementById('success-state');
+
+    let sfdcOpps = [];
+    let sfdcInstanceUrl = '';
+    let selectedSfdcOppId = '';
+    let selectedSfdcOppName = '';
+
+    // ── Load SFDC opportunities ──────────────────────────────────────────────
+    async function loadOpportunities() {
+      try {
+        const res = await fetch('/api/opportunities');
+        const data = await res.json();
+        if (!data.available || !data.records.length) return;
+        sfdcOpps = data.records;
+        sfdcInstanceUrl = data.instanceUrl || '';
+        const select = document.getElementById('sfdc-opp');
+        data.records.forEach(opp => {
+          const opt = document.createElement('option');
+          opt.value = opp.id;
+          opt.dataset.name = opp.name;
+          opt.dataset.account = opp.account;
+          const label = opp.account ? `${opp.account} — ${opp.name}` : opp.name;
+          opt.textContent = `${label}  (${opp.stage})`;
+          select.appendChild(opt);
+        });
+        document.getElementById('sfdc-field').style.display = 'block';
+      } catch {
+        // SFDC not available — field stays hidden
+      }
+    }
+
+    document.getElementById('sfdc-opp').addEventListener('change', e => {
+      const oppId = e.target.value;
+      selectedSfdcOppId = oppId;
+      const opp = sfdcOpps.find(o => o.id === oppId);
+      selectedSfdcOppName = opp ? opp.name : '';
+      const linkRow = document.getElementById('sfdc-link-row');
+      const linkA = document.getElementById('sfdc-link-a');
+      if (oppId && sfdcInstanceUrl) {
+        linkA.href = `${sfdcInstanceUrl}/lightning/r/Opportunity/${oppId}/view`;
+        linkRow.style.display = 'block';
+        // Auto-fill context if blank
+        if (!form.context.value.trim() && opp) {
+          form.context.value = opp.account ? `${opp.account} — ${opp.name}` : opp.name;
+        }
+      } else {
+        linkRow.style.display = 'none';
+      }
+    });
+
+    loadOpportunities();
+
+    // ── Submit ───────────────────────────────────────────────────────────────
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      const body = {
+        name: form.name.value,
+        role: form.role.value,
+        context: form.context.value,
+        doneWell: form.doneWell.value,
+        couldBeBetter: form.couldBeBetter.value,
+        sfdcOppId: selectedSfdcOppId,
+        sfdcOppName: selectedSfdcOppName,
+      };
+
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          form.style.display = 'none';
+          successState.style.display = 'block';
+        } else {
+          alert(data.error || 'Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Send feedback';
+        }
+      } catch {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Send feedback';
+      }
+    });
+
+    function resetForm() {
+      form.reset();
+      selectedSfdcOppId = '';
+      selectedSfdcOppName = '';
+      document.getElementById('sfdc-link-row').style.display = 'none';
+      form.style.display = 'block';
+      successState.style.display = 'none';
+      btn.disabled = false;
+      btn.textContent = 'Send feedback';
+    }
+  </script>
+</body>
+</html>

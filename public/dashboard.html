@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1B2F4E;
+      --surface: #243B5A;
+      --surface2: #2C4A6E;
+      --border: rgba(255,255,255,0.1);
+      --border-bright: rgba(255,255,255,0.16);
+      --purple: #635BFF;
+      --purple-light: #9D97FF;
+      --gold: #F5A623;
+      --gold-dark: #C47D0A;
+      --green: #3ECF8E;
+      --amber: #F59E0B;
+      --red: #EF4444;
+      --text: #FFFFFF;
+      --text-muted: #8FADC8;
+      --text-dim: #5A7FA0;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── STRIPE LOGO MARK SVG (inline helper) ── */
+    .stripe-mark {
+      flex-shrink: 0;
+    }
+
+    /* ── AUTH GATE ── */
+    #auth-gate {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      padding: 48px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .auth-logo {
+      margin: 0 auto 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .auth-card h2 { font-size: 22px; margin-bottom: 8px; }
+    .auth-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+
+    .auth-card input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.15s;
+    }
+    .auth-card input:focus { border-color: var(--purple); }
+
+    .auth-card button {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--purple), #4B44CC);
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .auth-card button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(99,91,255,0.4);
+    }
+
+    .auth-error {
+      font-size: 13px;
+      color: var(--red);
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    #app { display: none; }
+
+    header {
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(27, 47, 78, 0.92);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-title h1 { font-size: 17px; font-weight: 700; }
+    .header-title p { font-size: 12px; color: var(--text-muted); }
+
+    .stats-bar { display: flex; gap: 24px; align-items: center; }
+
+    .stat { text-align: right; }
+    .stat-num { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 40px 80px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── COIN BUCKETS ── */
+    .buckets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 56px;
+    }
+
+    .bucket-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 18px 18px;
+      position: relative;
+      overflow: visible;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bucket-card:hover {
+      border-color: rgba(99,91,255,0.45);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.25);
+    }
+
+    .bucket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .principle-icon { font-size: 20px; line-height: 1; }
+
+    .coin-count {
+      background: var(--purple);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      min-width: 26px;
+      text-align: center;
+    }
+
+    .principle-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 3px;
+    }
+
+    .principle-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+
+    .bucket-body {
+      flex: 1;
+      position: relative;
+      margin-top: auto;
+      min-height: 76px;
+    }
+
+    .bucket-lip {
+      width: calc(100% + 10px);
+      height: 5px;
+      background: rgba(255,255,255,0.13);
+      border-radius: 4px 4px 0 0;
+      margin: 0 -5px;
+      margin-bottom: -1px;
+    }
+
+    .bucket-container {
+      position: relative;
+      width: 100%;
+      height: 66px;
+      border: 2px solid rgba(255,255,255,0.13);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .bucket-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, rgba(99,91,255,0.45), rgba(99,91,255,0.75));
+      border-radius: 0 0 10px 10px;
+      transition: height 1.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      height: 0%;
+    }
+
+    .coins-display {
+      position: absolute;
+      bottom: 5px; left: 0; right: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 5px;
+      z-index: 2;
+    }
+
+    .coin-stack {
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFE566, var(--gold), var(--gold-dark));
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .coin-falling {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFE566, var(--gold), var(--gold-dark));
+      border: 1px solid rgba(255,255,255,0.35);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      animation: coinDrop 0.65s ease-in forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes coinDrop {
+      0%   { top: -28px; opacity: 0; transform: rotate(0deg); }
+      12%  { opacity: 1; }
+      78%  { top: 52px; transform: rotate(175deg); }
+      85%  { top: 45px; transform: rotate(188deg); }
+      100% { top: 52px; opacity: 0; transform: rotate(183deg); }
+    }
+
+    .bucket-card.receiving {
+      border-color: rgba(245,166,35,0.55);
+      box-shadow: 0 0 28px rgba(245,166,35,0.18);
+    }
+
+    /* ── BUCKET PANEL ── */
+    .bucket-panel-wrap {
+      grid-column: 1 / -1;
+      animation: fadeSlideIn 0.2s ease;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .bucket-feedback-panel {
+      background: var(--surface2);
+      border: 1px solid rgba(99,91,255,0.3);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .panel-title { font-size: 14px; font-weight: 700; color: var(--purple-light); }
+
+    .panel-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 17px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.1s;
+    }
+    .panel-close:hover { background: rgba(255,255,255,0.08); }
+
+    .feedback-entry {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 15px;
+      margin-bottom: 9px;
+    }
+
+    .entry-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .entry-name { font-weight: 600; color: var(--text); }
+    .entry-context {
+      background: rgba(99,91,255,0.15);
+      color: var(--purple-light);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+    }
+    .entry-sfdc-link {
+      font-size: 11px;
+      color: var(--purple-light);
+      text-decoration: none;
+      opacity: 0.8;
+    }
+    .entry-sfdc-link:hover { opacity: 1; text-decoration: underline; }
+
+    .entry-well, .entry-better {
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 5px;
+    }
+    .entry-well { color: #6EE7B7; }
+    .entry-better { color: #FCD34D; }
+    .entry-well::before { content: '✓ '; font-weight: 700; }
+    .entry-better::before { content: '→ '; font-weight: 700; }
+
+    /* ── L4 SA LADDER ── */
+    .ladder-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 56px;
+    }
+
+    .ladder-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      transition: border-color 0.2s;
+    }
+    .ladder-card:hover { border-color: rgba(99,91,255,0.3); }
+
+    .ladder-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .ladder-icon {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+
+    .ladder-title { font-size: 13px; font-weight: 700; }
+    .ladder-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    .ladder-bar-wrap { margin-bottom: 11px; }
+    .ladder-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .ladder-bar {
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .ladder-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      width: 0%;
+    }
+
+    .ladder-snippets { display: flex; flex-direction: column; gap: 5px; }
+    .snippet {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.03);
+      border-left: 2px solid rgba(255,255,255,0.1);
+      padding: 6px 10px;
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+      font-style: italic;
+    }
+    .no-snippets { font-size: 12px; color: var(--text-dim); font-style: italic; }
+
+    /* ── SFDC PIPELINE ── */
+    .sfdc-unavailable {
+      background: var(--surface);
+      border: 1px dashed var(--border-bright);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .sfdc-unavailable-icon { font-size: 24px; flex-shrink: 0; }
+    .sfdc-unavailable h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .sfdc-unavailable p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .sfdc-unavailable code {
+      background: rgba(255,255,255,0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .pipeline-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .pipeline-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .pipeline-stat-num { font-size: 24px; font-weight: 700; color: var(--gold); }
+    .pipeline-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+    .pipeline-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 56px;
+    }
+
+    .pipeline-table-header {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr;
+      padding: 10px 18px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      gap: 10px;
+    }
+
+    .pipeline-row {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr 1fr 0.8fr;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      gap: 10px;
+      transition: background 0.1s;
+    }
+    .pipeline-row:last-child { border-bottom: none; }
+    .pipeline-row:hover { background: rgba(255,255,255,0.03); }
+
+    .opp-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .opp-account { font-size: 11px; color: var(--text-muted); }
+    .opp-link { font-size: 12px; color: var(--purple-light); text-decoration: none; }
+    .opp-link:hover { text-decoration: underline; }
+
+    .stage-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .feedback-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .feedback-badge.has-feedback { color: var(--green); }
+
+    /* ── FEED ── */
+    .feed { display: flex; flex-direction: column; gap: 11px; }
+
+    .feed-entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      transition: border-color 0.2s;
+    }
+    .feed-entry:hover { border-color: rgba(99,91,255,0.3); }
+
+    .feed-meta {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .feed-name { font-size: 14px; font-weight: 700; }
+    .feed-role {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.06);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .feed-ctx { font-size: 12px; color: var(--purple-light); }
+    .feed-sfdc-link { font-size: 11px; color: var(--gold); text-decoration: none; }
+    .feed-sfdc-link:hover { text-decoration: underline; }
+    .feed-date { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+
+    .feed-col-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; }
+    .feed-col-label.green { color: var(--green); }
+    .feed-col-label.amber { color: var(--amber); }
+    .feed-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+
+    .pulse-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.04em;
+    }
+    .pulse-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 16px 20px; }
+      main { padding: 24px 20px; }
+      .buckets-grid { grid-template-columns: 1fr 1fr; }
+      .ladder-grid { grid-template-columns: 1fr; }
+      .feed-entry { grid-template-columns: 1fr; }
+      .stats-bar { gap: 14px; }
+      .pipeline-stats { grid-template-columns: 1fr 1fr; }
+      .pipeline-table-header, .pipeline-row { grid-template-columns: 2fr 1fr 1fr; }
+      .pipeline-table-header :nth-child(4),
+      .pipeline-table-header :nth-child(5),
+      .pipeline-row :nth-child(4),
+      .pipeline-row :nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <!-- Stripe parallelogram mark — 56px -->
+      <svg width="56" height="56" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ag1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7C72FF"/>
+            <stop offset="1" stop-color="#4338CA"/>
+          </linearGradient>
+        </defs>
+        <rect width="36" height="36" rx="8" fill="url(#ag1)"/>
+        <path d="M7 10 L24 10 L28.5 17 L11.5 17 Z" fill="white"/>
+        <path d="M7 20 L24 20 L28.5 27 L11.5 27 Z" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+    </div>
+    <h2>Pulse Dashboard</h2>
+    <p>Brian Truong · SA Development</p>
+    <input type="password" id="key-input" placeholder="Enter access key" />
+    <div class="auth-error" id="auth-error">Incorrect key. Try again.</div>
+    <button onclick="unlock()">View Dashboard</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <!-- Stripe parallelogram mark — 40px -->
+      <svg class="stripe-mark" width="40" height="40" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hg1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7C72FF"/>
+            <stop offset="1" stop-color="#4338CA"/>
+          </linearGradient>
+        </defs>
+        <rect width="36" height="36" rx="8" fill="url(#hg1)"/>
+        <path d="M7 10 L24 10 L28.5 17 L11.5 17 Z" fill="white"/>
+        <path d="M7 20 L24 20 L28.5 27 L11.5 27 Z" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+      <div class="header-title">
+        <h1>Pulse</h1>
+        <p>Brian Truong · SA Development</p>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">Responses</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-contributors">—</div>
+        <div class="stat-label">Contributors</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-last">—</div>
+        <div class="stat-label">Last entry</div>
+      </div>
+      <div class="pulse-badge">
+        <div class="pulse-dot"></div>
+        Live
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- STRIPE OPERATING PRINCIPLES -->
+    <div class="section-title">Stripe Operating Principles</div>
+    <div class="buckets-grid" id="buckets-grid"></div>
+
+    <!-- L4 SA LADDER -->
+    <div class="section-title">L4 SA Ladder Alignment</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:-12px;margin-bottom:18px;">
+      Signal strength derived from keyword analysis across collected feedback. Cross-reference with the <a href="https://docs.google.com/spreadsheets/d/1odWpXw3z2_CJgDS1TaqE_JiVsi-JGUwp_WJXlGTf0IE/" target="_blank" style="color:var(--purple-light);">official L4 SA Ladder ↗</a>.
+    </p>
+    <div class="ladder-grid" id="ladder-grid"></div>
+
+    <!-- SFDC PIPELINE -->
+    <div class="section-title">Salesforce Revenue Impact</div>
+    <div id="sfdc-section"></div>
+
+    <!-- FULL FEED -->
+    <div class="section-title">All Feedback</div>
+    <div class="feed" id="feed"></div>
+
+  </main>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+
+const PRINCIPLES = [
+  {
+    id: 'users-first',
+    name: 'Users first',
+    desc: 'Serve the businesses we exist for. Talk to users constantly.',
+    icon: '👥',
+    keywords: ['user', 'customer', 'client', 'business', 'needs', 'serve', 'understand'],
+  },
+  {
+    id: 'craft',
+    name: 'Create with craft and beauty',
+    desc: 'With care, anything can be made surprisingly great.',
+    icon: '✨',
+    keywords: ['quality', 'craft', 'beautiful', 'detail', 'polish', 'careful', 'precise', 'clear', 'structured', 'well-designed'],
+  },
+  {
+    id: 'urgency',
+    name: 'Move with urgency and focus',
+    desc: 'Execute with speed on what matters most.',
+    icon: '⚡',
+    keywords: ['fast', 'quick', 'rapid', 'timely', 'responsive', 'urgent', 'efficient', 'delivered', 'speed', 'focus'],
+  },
+  {
+    id: 'collab',
+    name: 'Collaborate egolessly',
+    desc: 'One team. No fiefdoms. Learn from mistakes together.',
+    icon: '🤝',
+    keywords: ['collaborat', 'team', 'help', 'support', 'together', 'partner', 'align', 'egoless', 'share', 'credit'],
+  },
+  {
+    id: 'talent',
+    name: 'Obsess over talent',
+    desc: 'Hire the best. Support Stripes in doing the best work of their careers.',
+    icon: '🌟',
+    keywords: ['mentor', 'hire', 'talent', 'grow', 'develop', 'teach', 'spin-up', 'interview', 'coach', 'raise'],
+  },
+  {
+    id: 'curious',
+    name: 'Stay curious',
+    desc: 'Applied exercise in learning. Joy of discovery over comfort of certainty.',
+    icon: '🔍',
+    keywords: ['learn', 'curious', 'research', 'discover', 'explore', 'investigate', 'understand', 'deep', 'first principle'],
+  },
+];
+
+const LADDER = [
+  {
+    id: 'expertise',
+    title: 'Deploying Expertise',
+    subtitle: 'Domain mastery, competitive depth, business cases, C-suite engagement',
+    icon: '🔬',
+    color: '#635BFF',
+    bg: 'rgba(99,91,255,0.15)',
+    keywords: ['technical', 'competitive', 'domain', 'expert', 'architect', 'business case', 'roi', 'cpo', 'cto', 'product', 'market', 'solution', 'industry', 'roadmap', 'innovation', 'anticipat', 'mitigat'],
+    bullets: [
+      'Expert in a product domain or industry vertical',
+      'Leads account planning and builds financial business cases',
+      'Engages CPO/CTO-level technical leaders',
+      'Understands competitive landscape, weaknesses, and strategy',
+    ],
+  },
+  {
+    id: 'customer',
+    title: 'Strategic Customer Engagement',
+    subtitle: 'Senior stakeholders, trusted advisor, account growth',
+    icon: '🤝',
+    color: '#3ECF8E',
+    bg: 'rgba(62,207,142,0.12)',
+    keywords: ['trusted advisor', 'strategic customer', 'senior stakeholder', 'executive', 'geo', 'segment', 'account growth', 'deal', 'champion', 'head of payments', 'cpo', 'cto'],
+    bullets: [
+      'Recognised industry expert at Geo & Segment level',
+      'Acts as trusted advisor to senior customer stakeholders',
+      'Leads strategic deals and account growth planning with AE',
+      'Delivers ROI models demonstrating tangible business value',
+    ],
+  },
+  {
+    id: 'operations',
+    title: 'Operational Excellence',
+    subtitle: 'Cross-functional leadership, initiative, management influence',
+    icon: '📊',
+    color: '#F5A623',
+    bg: 'rgba(245,166,35,0.12)',
+    keywords: ['cross-functional', 'initiative', 'management', 'lead', 'implement', 'accountabl', 'course-correct', 'impact', 'direction', 'scope', 'best case', 'regional', 'segment', 'standard'],
+    bullets: [
+      'Manages multiple cross-functional initiatives without direction',
+      'Sets group standards; role model for senior team members',
+      'Business cases influence management goals and are used as team examples',
+      'Key contributor to Stripe product roadmap',
+    ],
+  },
+  {
+    id: 'community',
+    title: 'Community & Thought Leadership',
+    subtitle: 'Mentorship, events, EBCs, education, SFDC excellence',
+    icon: '🌐',
+    color: '#00A2FF',
+    bg: 'rgba(0,162,255,0.12)',
+    keywords: ['mentor', 'community', 'webinar', 'event', 'ebc', 'spin-up', 'collateral', 'interview', 'force multiplier', 'sfdc', 'best practice', 'lesson', 'educate', 'partner', 'proserve', 'library'],
+    bullets: [
+      'Leads EBCs and solution architecture discussions',
+      'Mentors multiple Stripes on technical skills and career trajectory',
+      'Evangelises SFDC best practices; identified and improved metric tracking',
+      'Conducts technical interviews; contributes to interview process',
+    ],
+  },
+  {
+    id: 'culture',
+    title: 'Stripe Culture & Ownership',
+    subtitle: 'Operating principles, inclusivity, modeling ownership',
+    icon: '🏛️',
+    color: '#EC4899',
+    bg: 'rgba(236,72,153,0.12)',
+    keywords: ['ownership', 'operating principles', 'diversity', 'inclusive', 'mission', 'model', 'culture', 'best interest', 'communicat', 'values', 'building'],
+    bullets: [
+      'Acts in best interest of Stripe; models ownership for all Stripes',
+      'Actively uses operating principles to guide and explain decisions',
+      'Effectively communicates the importance of company-building activities',
+      'Actively works to increase Stripe\'s inclusivity and diversity',
+    ],
+  },
+  {
+    id: 'product',
+    title: 'Product Influence & Demand Gen',
+    subtitle: 'Events, product feedback, innovative engagements, roadmap input',
+    icon: '🚀',
+    color: '#8B5CF6',
+    bg: 'rgba(139,92,246,0.12)',
+    keywords: ['demand gen', 'product market fit', 'roadmap workshop', 'art of the possible', 'webinar series', 'innovative', 'quantify', 'ebc', 'product feedback', 'workshop', 'segment', 'geo', 'demo'],
+    bullets: [
+      'Tech lead in events driving demand generation (workshops, webinars)',
+      'Works with product team to fine-tune product-market fit with customer demand',
+      'Gathers feedback across users, segments, and geos to help product prioritize',
+      'Leads innovative engagements: Roadmap Planning Workshops, Art of the Possible demos',
+    ],
+  },
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+function matchScore(text, keywords) {
+  const lower = text.toLowerCase();
+  return keywords.reduce((n, k) => n + (lower.includes(k.toLowerCase()) ? 1 : 0), 0);
+}
+
+function categorizeFeedback(entry) {
+  const combined = `${entry.doneWell} ${entry.couldBeBetter}`;
+  const scores = PRINCIPLES.map(p => ({ id: p.id, score: matchScore(combined, p.keywords) }));
+  const best = scores.reduce((a, b) => a.score >= b.score ? a : b);
+  return best.score > 0 ? best.id : null;
+}
+
+function ladderScore(allFeedback, keywords) {
+  if (!allFeedback.length) return 0;
+  const hits = allFeedback.filter(e => matchScore(`${e.doneWell} ${e.couldBeBetter}`, keywords) > 0).length;
+  return Math.min(Math.round((hits / allFeedback.length) * 130), 95);
+}
+
+function ladderSnippets(allFeedback, keywords) {
+  const snips = [];
+  for (const e of allFeedback) {
+    for (const line of [e.doneWell, e.couldBeBetter]) {
+      if (matchScore(line, keywords) > 0 && snips.length < 2) {
+        snips.push(line.length > 110 ? line.slice(0, 107) + '…' : line);
+      }
+    }
+  }
+  return snips;
+}
+
+function fmt$(n) {
+  if (!n) return '$0';
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`;
+  return `$${n}`;
+}
+
+function stageColor(stage) {
+  const s = (stage || '').toLowerCase();
+  if (s.includes('prospect') || s.includes('lead')) return { bg: 'rgba(99,91,255,0.2)', color: '#9D97FF' };
+  if (s.includes('qualify') || s.includes('discovery')) return { bg: 'rgba(0,162,255,0.2)', color: '#60C8FF' };
+  if (s.includes('proposal') || s.includes('value') || s.includes('demo')) return { bg: 'rgba(245,166,35,0.2)', color: '#F5A623' };
+  if (s.includes('negotiat') || s.includes('contract') || s.includes('commit')) return { bg: 'rgba(62,207,142,0.2)', color: '#3ECF8E' };
+  return { bg: 'rgba(255,255,255,0.08)', color: '#8FADC8' };
+}
+
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+
+let accessKey = '';
+
+document.getElementById('key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') unlock();
+});
+
+async function unlock() {
+  const key = document.getElementById('key-input').value.trim();
+  if (!key) return;
+  accessKey = key;
+  try {
+    const [fbRes, pipeRes] = await Promise.all([
+      fetch(`/api/feedback?key=${encodeURIComponent(key)}`),
+      fetch(`/api/pipeline?key=${encodeURIComponent(key)}`),
+    ]);
+    if (!fbRes.ok) {
+      document.getElementById('auth-error').style.display = 'block';
+      return;
+    }
+    const [feedback, pipeline] = await Promise.all([fbRes.json(), pipeRes.json()]);
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initDashboard(feedback, pipeline);
+  } catch {
+    document.getElementById('auth-error').style.display = 'block';
+  }
+}
+
+// ── RENDER BUCKETS ────────────────────────────────────────────────────────────
+
+function renderBuckets(allFeedback) {
+  const grid = document.getElementById('buckets-grid');
+  grid.innerHTML = '';
+
+  const bucketMap = {};
+  PRINCIPLES.forEach(p => bucketMap[p.id] = []);
+  const unmatched = [];
+  allFeedback.forEach(e => {
+    const id = categorizeFeedback(e);
+    if (id) bucketMap[id].push(e);
+    else unmatched.push(e);
+  });
+  unmatched.forEach((e, i) => bucketMap[PRINCIPLES[i % PRINCIPLES.length].id].push(e));
+
+  PRINCIPLES.forEach(p => {
+    const entries = bucketMap[p.id];
+    const count = entries.length;
+    const fillPct = Math.min(count * 13, 88);
+
+    const card = document.createElement('div');
+    card.className = 'bucket-card';
+    card.id = `bucket-${p.id}`;
+    card.innerHTML = `
+      <div class="bucket-header">
+        <span class="principle-icon">${p.icon}</span>
+        <span class="coin-count">${count}</span>
+      </div>
+      <div class="principle-name">${p.name}</div>
+      <div class="principle-desc">${p.desc}</div>
+      <div class="bucket-body">
+        <div class="bucket-lip"></div>
+        <div class="bucket-container" id="bc-${p.id}">
+          <div class="bucket-fill" id="bf-${p.id}"></div>
+          <div class="coins-display" id="cd-${p.id}"></div>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', () => togglePanel(p.id, entries, p.name));
+    grid.appendChild(card);
+
+    entries.forEach((_, i) => setTimeout(() => animateCoin(p.id), 280 + i * 110));
+    setTimeout(() => {
+      document.getElementById(`bf-${p.id}`).style.height = `${fillPct}%`;
+      const cdEl = document.getElementById(`cd-${p.id}`);
+      for (let i = 0; i < Math.min(count, 8); i++) {
+        const c = document.createElement('div');
+        c.className = 'coin-stack';
+        cdEl.appendChild(c);
+      }
+    }, 280 + entries.length * 110 + 180);
+  });
+}
+
+function animateCoin(principleId) {
+  const bc = document.getElementById(`bc-${principleId}`);
+  if (!bc) return;
+  const coin = document.createElement('div');
+  coin.className = 'coin-falling';
+  coin.style.left = `${28 + Math.random() * 44}%`;
+  bc.appendChild(coin);
+  setTimeout(() => coin.remove(), 700);
+  const card = document.getElementById(`bucket-${principleId}`);
+  card.classList.add('receiving');
+  setTimeout(() => card.classList.remove('receiving'), 750);
+}
+
+// ── BUCKET PANEL ──────────────────────────────────────────────────────────────
+
+let openPanel = null;
+
+function togglePanel(principleId, entries, name) {
+  const existing = document.getElementById(`panel-wrap-${principleId}`);
+  if (existing) { existing.remove(); openPanel = null; return; }
+  if (openPanel) document.getElementById(`panel-wrap-${openPanel}`)?.remove();
+  openPanel = principleId;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bucket-panel-wrap';
+  wrap.id = `panel-wrap-${principleId}`;
+
+  const sfdcInstanceUrl = window._sfdcInstanceUrl || '';
+  const innerHtml = entries.length === 0
+    ? '<p style="color:var(--text-muted);font-size:13px;">No feedback mapped to this principle yet.</p>'
+    : entries.map(e => `
+        <div class="feedback-entry">
+          <div class="entry-meta">
+            <span class="entry-name">${e.name}</span>
+            ${e.role ? `<span style="color:var(--text-muted);font-size:12px;">${e.role}</span>` : ''}
+            ${e.context ? `<span class="entry-context">${e.context}</span>` : ''}
+            ${e.sfdcOppId && sfdcInstanceUrl ? `<a class="entry-sfdc-link" href="${sfdcInstanceUrl}/lightning/r/Opportunity/${e.sfdcOppId}/view" target="_blank">↗ ${e.sfdcOppName || 'SFDC'}</a>` : ''}
+            <span style="margin-left:auto;font-size:11px;color:var(--text-dim);">${fmtDate(e.timestamp)}</span>
+          </div>
+          <div class="entry-well">${e.doneWell}</div>
+          <div class="entry-better">${e.couldBeBetter}</div>
+        </div>
+      `).join('');
+
+  wrap.innerHTML = `
+    <div class="bucket-feedback-panel">
+      <div class="panel-header">
+        <div class="panel-title">${name} — ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}</div>
+        <button class="panel-close" onclick="document.getElementById('panel-wrap-${principleId}').remove();openPanel=null;">✕</button>
+      </div>
+      ${innerHtml}
+    </div>
+  `;
+
+  const grid = document.getElementById('buckets-grid');
+  grid.after(wrap);
+}
+
+// ── RENDER LADDER ─────────────────────────────────────────────────────────────
+
+function renderLadder(allFeedback) {
+  const grid = document.getElementById('ladder-grid');
+  grid.innerHTML = '';
+  LADDER.forEach(area => {
+    const score = ladderScore(allFeedback, area.keywords);
+    const snippets = ladderSnippets(allFeedback, area.keywords);
+    const card = document.createElement('div');
+    card.className = 'ladder-card';
+    card.innerHTML = `
+      <div class="ladder-card-header">
+        <div class="ladder-icon" style="background:${area.bg};">${area.icon}</div>
+        <div>
+          <div class="ladder-title" style="color:${area.color};">${area.title}</div>
+          <div class="ladder-subtitle">${area.subtitle}</div>
+        </div>
+      </div>
+      <div class="ladder-bar-wrap">
+        <div class="ladder-bar-label">
+          <span>Feedback signal</span>
+          <span style="font-weight:600;color:${area.color};">${score}%</span>
+        </div>
+        <div class="ladder-bar">
+          <div class="ladder-bar-fill" id="lb-${area.id}" style="background:${area.color};"></div>
+        </div>
+      </div>
+      <div class="ladder-snippets">
+        ${snippets.length
+          ? snippets.map(s => `<div class="snippet">"${s}"</div>`).join('')
+          : `<div class="no-snippets">No direct signal yet — keep collecting.</div>`
+        }
+      </div>
+    `;
+    grid.appendChild(card);
+    setTimeout(() => { document.getElementById(`lb-${area.id}`).style.width = `${score}%`; }, 500);
+  });
+}
+
+// ── SFDC PIPELINE ─────────────────────────────────────────────────────────────
+
+function renderPipeline(pipeline, allFeedback) {
+  const el = document.getElementById('sfdc-section');
+
+  if (!pipeline || !pipeline.available) {
+    el.innerHTML = `
+      <div class="sfdc-unavailable">
+        <div class="sfdc-unavailable-icon">☁️</div>
+        <div>
+          <h4>Salesforce not connected</h4>
+          <p>Add <code>SFDC_USERNAME</code>, <code>SFDC_PASSWORD</code>, <code>SFDC_SECURITY_TOKEN</code>, and <code>SFDC_INSTANCE_URL</code> to your environment variables to pull live pipeline data here.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  window._sfdcInstanceUrl = pipeline.instanceUrl;
+  const feedbackByOpp = {};
+  allFeedback.filter(e => e.sfdcOppId).forEach(e => {
+    feedbackByOpp[e.sfdcOppId] = (feedbackByOpp[e.sfdcOppId] || 0) + 1;
+  });
+  const coveredCount = Object.keys(feedbackByOpp).length;
+
+  el.innerHTML = `
+    <div class="pipeline-stats">
+      <div class="pipeline-stat">
+        <div class="pipeline-stat-num">${fmt$(pipeline.totalPipeline)}</div>
+        <div class="pipeline-stat-label">Total open pipeline</div>
+      </div>
+      <div class="pipeline-stat">
+        <div class="pipeline-stat-num">${pipeline.count}</div>
+        <div class="pipeline-stat-label">Open opportunities</div>
+      </div>
+      <div class="pipeline-stat">
+        <div class="pipeline-stat-num">${coveredCount}</div>
+        <div class="pipeline-stat-label">Opps with feedback</div>
+      </div>
+    </div>
+    <div class="pipeline-table">
+      <div class="pipeline-table-header">
+        <span>Opportunity</span>
+        <span>Stage</span>
+        <span>Amount</span>
+        <span>Close Date</span>
+        <span>Feedback</span>
+      </div>
+      ${pipeline.records.slice(0, 20).map(r => {
+        const sc = stageColor(r.stage);
+        const fbCount = feedbackByOpp[r.id] || 0;
+        const oppUrl = `${pipeline.instanceUrl}/lightning/r/Opportunity/${r.id}/view`;
+        return `
+          <div class="pipeline-row">
+            <div>
+              <div class="opp-name">
+                <a class="opp-link" href="${oppUrl}" target="_blank" rel="noopener">${r.name}</a>
+              </div>
+              ${r.account ? `<div class="opp-account">${r.account}</div>` : ''}
+            </div>
+            <div><span class="stage-badge" style="background:${sc.bg};color:${sc.color};">${r.stage}</span></div>
+            <div style="font-size:13px;font-weight:600;">${fmt$(r.amount)}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${r.closeDate || '—'}</div>
+            <div>
+              <span class="feedback-badge ${fbCount ? 'has-feedback' : ''}">
+                ${fbCount ? `✓ ${fbCount}` : '—'}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ── RENDER FEED ───────────────────────────────────────────────────────────────
+
+function renderFeed(allFeedback) {
+  const feed = document.getElementById('feed');
+  const sorted = [...allFeedback].reverse();
+  const instanceUrl = window._sfdcInstanceUrl || '';
+
+  if (!sorted.length) {
+    feed.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">🪣</div>
+        <h3>No feedback yet</h3>
+        <p>Share the form link with your team after your next meeting.</p>
+      </div>
+    `;
+    return;
+  }
+
+  feed.innerHTML = sorted.map(e => `
+    <div class="feed-entry">
+      <div class="feed-meta">
+        <span class="feed-name">${e.name}</span>
+        ${e.role ? `<span class="feed-role">${e.role}</span>` : ''}
+        ${e.context ? `<span class="feed-ctx">· ${e.context}</span>` : ''}
+        ${e.sfdcOppId && instanceUrl ? `<a class="feed-sfdc-link" href="${instanceUrl}/lightning/r/Opportunity/${e.sfdcOppId}/view" target="_blank">↗ ${e.sfdcOppName || 'SFDC'}</a>` : ''}
+        <span class="feed-date">${timeAgo(e.timestamp)} · ${fmtDate(e.timestamp)}</span>
+      </div>
+      <div>
+        <div class="feed-col-label green">What worked</div>
+        <div class="feed-text">${e.doneWell}</div>
+      </div>
+      <div>
+        <div class="feed-col-label amber">What could be sharper</div>
+        <div class="feed-text">${e.couldBeBetter}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+
+function renderStats(allFeedback) {
+  document.getElementById('stat-total').textContent = allFeedback.length;
+  document.getElementById('stat-contributors').textContent = new Set(allFeedback.map(e => e.name)).size;
+  if (allFeedback.length) {
+    document.getElementById('stat-last').textContent = timeAgo(allFeedback[allFeedback.length - 1].timestamp);
+  } else {
+    document.getElementById('stat-last').textContent = '—';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+function initDashboard(feedback, pipeline) {
+  if (pipeline?.instanceUrl) window._sfdcInstanceUrl = pipeline.instanceUrl;
+  renderStats(feedback);
+  renderBuckets(feedback);
+  renderLadder(feedback);
+  renderPipeline(pipeline, feedback);
+  renderFeed(feedback);
+}
+</script>
+</body>
+</html>
