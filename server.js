@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DASHBOARD_KEY = process.env.DASHBOARD_KEY || 'stripe-atr-2026';
+const DASHBOARD_KEY = process.env.DASHBOARD_KEY || 'sa-atr';
 const DATA_FILE = path.join(__dirname, 'data', 'feedback.json');
 
 const USE_SHEETS = !!(process.env.GOOGLE_SERVICE_ACCOUNT_KEY && process.env.GOOGLE_SHEETS_ID);
@@ -27,18 +27,18 @@ async function getSheetsClient() {
   return _sheetsClient;
 }
 
-const HEADERS = ['id', 'timestamp', 'name', 'role', 'context', 'sfdcOppName', 'sfdcOppId', 'doneWell', 'couldBeBetter'];
+const HEADERS = ['id', 'timestamp', 'name', 'role', 'context', 'sfdcOppName', 'sfdcOppId', 'sfdcUrl', 'doneWell', 'couldBeBetter'];
 
 async function ensureHeaders() {
   const client = await getSheetsClient();
   const res = await client.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-    range: 'Sheet1!A1:I1',
+    range: 'Sheet1!A1:J1',
   });
   if (!res.data.values?.[0]?.length) {
     await client.spreadsheets.values.update({
       spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-      range: 'Sheet1!A1:I1',
+      range: 'Sheet1!A1:J1',
       valueInputOption: 'RAW',
       resource: { values: [HEADERS] },
     });
@@ -50,13 +50,14 @@ async function loadFromSheets() {
   const client = await getSheetsClient();
   const res = await client.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-    range: 'Sheet1!A2:I',
+    range: 'Sheet1!A2:J',
   });
   return (res.data.values || []).filter(r => r[0]).map(
-    ([id, timestamp, name, role, context, sfdcOppName, sfdcOppId, doneWell, couldBeBetter]) => ({
+    ([id, timestamp, name, role, context, sfdcOppName, sfdcOppId, sfdcUrl, doneWell, couldBeBetter]) => ({
       id, timestamp, name,
       role: role || '', context: context || '',
       sfdcOppName: sfdcOppName || '', sfdcOppId: sfdcOppId || '',
+      sfdcUrl: sfdcUrl || '',
       doneWell, couldBeBetter,
     })
   );
@@ -67,13 +68,13 @@ async function appendToSheets(entry) {
   const client = await getSheetsClient();
   await client.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-    range: 'Sheet1!A:I',
+    range: 'Sheet1!A:J',
     valueInputOption: 'USER_ENTERED',
     resource: {
       values: [[
         entry.id, entry.timestamp, entry.name, entry.role,
         entry.context, entry.sfdcOppName, entry.sfdcOppId,
-        entry.doneWell, entry.couldBeBetter,
+        entry.sfdcUrl, entry.doneWell, entry.couldBeBetter,
       ]],
     },
   });
@@ -138,7 +139,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/feedback', async (req, res) => {
-  const { name, role, context, doneWell, couldBeBetter, sfdcOppName, sfdcOppId } = req.body;
+  const { name, role, context, doneWell, couldBeBetter, sfdcOppName, sfdcOppId, sfdcUrl } = req.body;
   if (!name?.trim() || !doneWell?.trim() || !couldBeBetter?.trim()) {
     return res.status(400).json({ error: 'Name, done well, and could be better are required.' });
   }
@@ -149,6 +150,7 @@ app.post('/api/feedback', async (req, res) => {
     context: context?.trim() || '',
     sfdcOppName: sfdcOppName?.trim() || '',
     sfdcOppId: sfdcOppId?.trim() || '',
+    sfdcUrl: sfdcUrl?.trim() || '',
     doneWell: doneWell.trim(),
     couldBeBetter: couldBeBetter.trim(),
     timestamp: new Date().toISOString(),

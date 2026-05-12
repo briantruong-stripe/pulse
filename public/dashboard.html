@@ -8,11 +8,11 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #1B2F4E;
-      --surface: #243B5A;
-      --surface2: #2C4A6E;
-      --border: rgba(255,255,255,0.1);
-      --border-bright: rgba(255,255,255,0.16);
+      --bg: #2C4A7C;
+      --surface: #355A91;
+      --surface2: #3E6AA6;
+      --border: rgba(255,255,255,0.12);
+      --border-bright: rgba(255,255,255,0.2);
       --purple: #635BFF;
       --purple-light: #9D97FF;
       --gold: #F5A623;
@@ -33,9 +33,32 @@
       min-height: 100vh;
     }
 
-    /* ── STRIPE LOGO MARK SVG (inline helper) ── */
-    .stripe-mark {
+    .logo-mark-wrap {
       flex-shrink: 0;
+      background: linear-gradient(135deg, #7C72FF, #4338CA);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .logo-mark-wrap img {
+      width: 60%;
+      height: auto;
+    }
+
+    .auth-logo .logo-mark-wrap {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(99,91,255,0.4);
+    }
+
+    .header-logo-wrap {
+      width: 40px;
+      height: 40px;
+      box-shadow: 0 4px 15px rgba(99,91,255,0.3);
     }
 
     /* ── AUTH GATE ── */
@@ -116,7 +139,7 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
-      background: rgba(27, 47, 78, 0.92);
+      background: rgba(44, 74, 124, 0.92);
       backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
@@ -634,18 +657,9 @@
 <div id="auth-gate">
   <div class="auth-card">
     <div class="auth-logo">
-      <!-- Stripe parallelogram mark — 56px -->
-      <svg width="56" height="56" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="ag1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#7C72FF"/>
-            <stop offset="1" stop-color="#4338CA"/>
-          </linearGradient>
-        </defs>
-        <rect width="36" height="36" rx="8" fill="url(#ag1)"/>
-        <path d="M7 10 L24 10 L28.5 17 L11.5 17 Z" fill="white"/>
-        <path d="M7 20 L24 20 L28.5 27 L11.5 27 Z" fill="rgba(255,255,255,0.55)"/>
-      </svg>
+      <div class="logo-mark-wrap">
+        <img src="/stripe-mark.svg" alt="Stripe" onerror="this.style.opacity='0'" />
+      </div>
     </div>
     <h2>Pulse Dashboard</h2>
     <p>Brian Truong · SA Development</p>
@@ -659,18 +673,8 @@
 <div id="app">
   <header>
     <div class="header-left">
-      <!-- Stripe parallelogram mark — 40px -->
-      <svg class="stripe-mark" width="40" height="40" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="hg1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#7C72FF"/>
-            <stop offset="1" stop-color="#4338CA"/>
-          </linearGradient>
-        </defs>
-        <rect width="36" height="36" rx="8" fill="url(#hg1)"/>
-        <path d="M7 10 L24 10 L28.5 17 L11.5 17 Z" fill="white"/>
-        <path d="M7 20 L24 20 L28.5 27 L11.5 27 Z" fill="rgba(255,255,255,0.55)"/>
-      </svg>
+      <div class="logo-mark-wrap header-logo-wrap">
+        <img src="/stripe-mark.svg" alt="Stripe" onerror="this.style.opacity='0'" /></div>
       <div class="header-title">
         <h1>Pulse</h1>
         <p>Brian Truong · SA Development</p>
@@ -1044,7 +1048,7 @@ function togglePanel(principleId, entries, name) {
             <span class="entry-name">${e.name}</span>
             ${e.role ? `<span style="color:var(--text-muted);font-size:12px;">${e.role}</span>` : ''}
             ${e.context ? `<span class="entry-context">${e.context}</span>` : ''}
-            ${e.sfdcOppId && sfdcInstanceUrl ? `<a class="entry-sfdc-link" href="${sfdcInstanceUrl}/lightning/r/Opportunity/${e.sfdcOppId}/view" target="_blank">↗ ${e.sfdcOppName || 'SFDC'}</a>` : ''}
+            ${e.sfdcUrl ? `<a class="entry-sfdc-link" href="${e.sfdcUrl}" target="_blank" rel="noopener">↗ SFDC opp</a>` : (e.sfdcOppId && sfdcInstanceUrl ? `<a class="entry-sfdc-link" href="${sfdcInstanceUrl}/lightning/r/Opportunity/${e.sfdcOppId}/view" target="_blank">↗ ${e.sfdcOppName || 'SFDC'}</a>` : '')}
             <span style="margin-left:auto;font-size:11px;color:var(--text-dim);">${fmtDate(e.timestamp)}</span>
           </div>
           <div class="entry-well">${e.doneWell}</div>
@@ -1204,7 +1208,7 @@ function renderFeed(allFeedback) {
         <span class="feed-name">${e.name}</span>
         ${e.role ? `<span class="feed-role">${e.role}</span>` : ''}
         ${e.context ? `<span class="feed-ctx">· ${e.context}</span>` : ''}
-        ${e.sfdcOppId && instanceUrl ? `<a class="feed-sfdc-link" href="${instanceUrl}/lightning/r/Opportunity/${e.sfdcOppId}/view" target="_blank">↗ ${e.sfdcOppName || 'SFDC'}</a>` : ''}
+        ${e.sfdcUrl ? `<a class="feed-sfdc-link" href="${e.sfdcUrl}" target="_blank" rel="noopener">↗ SFDC opp</a>` : (e.sfdcOppId && instanceUrl ? `<a class="feed-sfdc-link" href="${instanceUrl}/lightning/r/Opportunity/${e.sfdcOppId}/view" target="_blank">↗ ${e.sfdcOppName || 'SFDC'}</a>` : '')}
         <span class="feed-date">${timeAgo(e.timestamp)} · ${fmtDate(e.timestamp)}</span>
       </div>
       <div>

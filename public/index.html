@@ -44,6 +44,23 @@
       margin-bottom: 32px;
     }
 
+    .logo-mark-wrap {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #7C72FF, #4338CA);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .logo-mark-wrap img {
+      width: 24px;
+      height: auto;
+    }
+
     .logo-text {
       font-size: 17px;
       font-weight: 600;
@@ -250,18 +267,9 @@
 <body>
   <div class="card" id="form-card">
     <div class="logo">
-      <!-- Stripe parallelogram mark -->
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="fg1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#7C72FF"/>
-            <stop offset="1" stop-color="#4338CA"/>
-          </linearGradient>
-        </defs>
-        <rect width="36" height="36" rx="8" fill="url(#fg1)"/>
-        <path d="M7 10 L24 10 L28.5 17 L11.5 17 Z" fill="white"/>
-        <path d="M7 20 L24 20 L28.5 27 L11.5 27 Z" fill="rgba(255,255,255,0.55)"/>
-      </svg>
+      <div class="logo-mark-wrap">
+        <img src="/stripe-mark.svg" alt="Stripe" onerror="this.style.opacity='0'" />
+      </div>
       <div>
         <div class="logo-text">Pulse</div>
         <div class="logo-sub">Quick feedback for Brian</div>
@@ -288,7 +296,7 @@
         <input type="text" id="context" name="context" placeholder="e.g. Acme Corp demo, QBR prep call..." />
       </div>
 
-      <!-- SFDC opportunity dropdown — shown only when SFDC is configured -->
+      <!-- SFDC opportunity dropdown — shown only when SFDC API is configured -->
       <div class="field" id="sfdc-field" style="display:none;">
         <label for="sfdc-opp">Salesforce opportunity <span class="optional">(optional)</span></label>
         <select id="sfdc-opp">
@@ -302,6 +310,12 @@
         </div>
       </div>
 
+      <!-- Always-visible SFDC link field -->
+      <div class="field">
+        <label for="sfdc-url">Salesforce opportunity link <span class="optional">(optional)</span></label>
+        <input type="url" id="sfdc-url" name="sfdcUrl" placeholder="https://stripe.lightning.force.com/lightning/r/Opportunity/..." />
+      </div>
+
       <div class="divider"></div>
 
       <div class="section-label">Feedback</div>
@@ -311,7 +325,7 @@
           <span class="dot dot-green"></span>
           What worked well
         </label>
-        <textarea id="doneWell" name="doneWell" placeholder="What should Brian keep doing? Be specific." required></textarea>
+        <textarea id="doneWell" name="doneWell" placeholder="What should Brian keep doing? Please be specific." required></textarea>
       </div>
 
       <div class="field">
@@ -319,7 +333,7 @@
           <span class="dot dot-amber"></span>
           What could be sharper
         </label>
-        <textarea id="couldBeBetter" name="couldBeBetter" placeholder="What's one thing that could've been stronger?" required></textarea>
+        <textarea id="couldBeBetter" name="couldBeBetter" placeholder="What's one area of potential improvement?" required></textarea>
       </div>
 
       <div class="transparency-note">
@@ -406,6 +420,7 @@
         couldBeBetter: form.couldBeBetter.value,
         sfdcOppId: selectedSfdcOppId,
         sfdcOppName: selectedSfdcOppName,
+        sfdcUrl: document.getElementById('sfdc-url').value,
       };
 
       try {
