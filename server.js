@@ -165,7 +165,6 @@ app.post('/api/feedback', async (req, res) => {
 });
 
 app.get('/api/feedback', async (req, res) => {
-  if (req.query.key !== DASHBOARD_KEY) return res.status(401).json({ error: 'Invalid key.' });
   try {
     res.json(await loadFeedback());
   } catch (err) {
@@ -206,7 +205,6 @@ app.get('/api/opportunities', async (req, res) => {
 
 // Protected pipeline summary for dashboard
 app.get('/api/pipeline', async (req, res) => {
-  if (req.query.key !== DASHBOARD_KEY) return res.status(401).json({ error: 'Invalid key.' });
   if (!USE_SFDC) return res.json({ available: false });
   try {
     const conn = await getSfdcConnection();

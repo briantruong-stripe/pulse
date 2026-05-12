@@ -66,77 +66,9 @@
 
     .header-logo-wrap span { font-size: 19px; }
 
-    /* ── AUTH GATE ── */
-    #auth-gate {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-
-    .auth-card {
-      background: var(--surface);
-      border: 1px solid var(--border-bright);
-      border-radius: 20px;
-      padding: 48px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-    }
-
-    .auth-logo {
-      margin: 0 auto 24px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .auth-card h2 { font-size: 22px; margin-bottom: 8px; }
-    .auth-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
-
-    .auth-card input {
-      width: 100%;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.07);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-size: 15px;
-      color: var(--text);
-      font-family: inherit;
-      outline: none;
-      margin-bottom: 14px;
-      transition: border-color 0.15s;
-    }
-    .auth-card input:focus { border-color: var(--purple); }
-
-    .auth-card button {
-      width: 100%;
-      padding: 13px;
-      background: linear-gradient(135deg, var(--purple), #4B44CC);
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      color: white;
-      cursor: pointer;
-      font-family: inherit;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .auth-card button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 25px rgba(99,91,255,0.4);
-    }
-
-    .auth-error {
-      font-size: 13px;
-      color: var(--red);
-      margin-top: 10px;
-      display: none;
-    }
 
     /* ── MAIN LAYOUT ── */
-    #app { display: none; }
+    #app { display: block; }
 
     header {
       padding: 20px 40px;
@@ -658,22 +590,6 @@
 </head>
 <body>
 
-<!-- AUTH GATE -->
-<div id="auth-gate">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="logo-mark-wrap">
-        <span>S</span>
-      </div>
-    </div>
-    <h2>Pulse Dashboard</h2>
-    <p>Brian Truong · SA Development</p>
-    <input type="password" id="key-input" placeholder="Enter access key" />
-    <div class="auth-error" id="auth-error">Incorrect key. Try again.</div>
-    <button onclick="unlock()">View Dashboard</button>
-  </div>
-</div>
-
 <!-- MAIN APP -->
 <div id="app">
   <header>
@@ -933,35 +849,22 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
+// ── AUTO LOAD ─────────────────────────────────────────────────────────────────
 
-let accessKey = '';
-
-document.getElementById('key-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') unlock();
-});
-
-async function unlock() {
-  const key = document.getElementById('key-input').value.trim();
-  if (!key) return;
-  accessKey = key;
+async function loadDashboard() {
   try {
     const [fbRes, pipeRes] = await Promise.all([
-      fetch(`/api/feedback?key=${encodeURIComponent(key)}`),
-      fetch(`/api/pipeline?key=${encodeURIComponent(key)}`),
+      fetch('/api/feedback'),
+      fetch('/api/pipeline'),
     ]);
-    if (!fbRes.ok) {
-      document.getElementById('auth-error').style.display = 'block';
-      return;
-    }
     const [feedback, pipeline] = await Promise.all([fbRes.json(), pipeRes.json()]);
-    document.getElementById('auth-gate').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
     initDashboard(feedback, pipeline);
-  } catch {
-    document.getElementById('auth-error').style.display = 'block';
+  } catch (err) {
+    console.error('Failed to load dashboard:', err);
   }
 }
+
+loadDashboard();
 
 // ── RENDER BUCKETS ────────────────────────────────────────────────────────────
 
