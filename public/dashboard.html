@@ -755,9 +755,9 @@ function matchScore(text, keywords) {
 
 function categorizeFeedback(entry) {
   const combined = `${entry.doneWell} ${entry.couldBeBetter}`;
-  const scores = PRINCIPLES.map(p => ({ id: p.id, score: matchScore(combined, p.keywords) }));
-  const best = scores.reduce((a, b) => a.score >= b.score ? a : b);
-  return best.score > 0 ? best.id : null;
+  return PRINCIPLES
+    .filter(p => matchScore(combined, p.keywords) > 0)
+    .map(p => p.id);
 }
 
 function ladderScore(allFeedback, keywords) {
@@ -839,8 +839,8 @@ function renderBuckets(allFeedback) {
   PRINCIPLES.forEach(p => bucketMap[p.id] = []);
   const unmatched = [];
   allFeedback.forEach(e => {
-    const id = categorizeFeedback(e);
-    if (id) bucketMap[id].push(e);
+    const ids = categorizeFeedback(e);
+    if (ids.length) ids.forEach(id => bucketMap[id].push(e));
     else unmatched.push(e);
   });
   unmatched.forEach((e, i) => bucketMap[PRINCIPLES[i % PRINCIPLES.length].id].push(e));
