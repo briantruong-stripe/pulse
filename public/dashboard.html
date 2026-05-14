@@ -671,7 +671,7 @@ const PRINCIPLES = [
     name: 'Move with urgency and focus',
     desc: 'Execute with speed on what matters most.',
     icon: '⚡',
-    keywords: ['fast', 'quick', 'rapid', 'timely', 'responsive', 'urgent', 'efficient', 'delivered', 'speed', 'focus'],
+    keywords: ['fast', 'quick', 'rapid', 'timely', 'responsive', 'urgent', 'efficient', 'delivered', 'speed', 'focus', 'initiative', 'proactive', 'accelerat', 'leadership', 'prepared', 'prep', 'verified', 'checked', 'leverag', 'ahead of'],
   },
   {
     id: 'collab',
@@ -685,7 +685,7 @@ const PRINCIPLES = [
     name: 'Obsess over talent',
     desc: 'Hire the best. Support Stripes in doing the best work of their careers.',
     icon: '🌟',
-    keywords: ['mentor', 'hire', 'talent', 'grow', 'develop', 'teach', 'spin-up', 'interview', 'coach', 'raise'],
+    keywords: ['mentor', 'hire', 'hiring', 'talent bar', 'interview', 'coach', 'foster development', 'manage', 'direct report', 'team lead', 'people manager'],
   },
   {
     id: 'curious',
@@ -806,7 +806,7 @@ function timeAgo(iso) {
 }
 
 function fmtDate(iso) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 // ── AUTO LOAD ─────────────────────────────────────────────────────────────────
