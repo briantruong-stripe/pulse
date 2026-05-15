@@ -151,6 +151,44 @@ function appendToLocal(entry) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+// ── Slack ─────────────────────────────────────────────────────────────────────
+
+async function notifySlack(entry) {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+  if (!webhookUrl) return;
+  const mention = process.env.SLACK_MEMBER_ID ? `<@${process.env.SLACK_MEMBER_ID}>++ ` : '';
+  const context = entry.context ? ` · _${entry.context}_` : '';
+  const role = entry.role ? ` (${entry.role})` : '';
+  const payload = {
+    text: `${mention}New feedback from *${entry.name}*${role}${context}`,
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `${mention}New feedback from *${entry.name}*${role}${context}`,
+        },
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*✅ What worked well*\n${entry.doneWell}` },
+          { type: 'mrkdwn', text: `*🔶 What could be sharper*\n${entry.couldBeBetter}` },
+        ],
+      },
+    ],
+  };
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error('Slack notify error:', err.message);
+  }
+}
+
 // ── Unified storage ───────────────────────────────────────────────────────────
 
 async function loadFeedback() {
@@ -210,6 +248,7 @@ app.post('/api/feedback', async (req, res) => {
   };
   try {
     await saveFeedback(entry);
+    notifySlack(entry).catch(() => {});
     res.json({ success: true });
   } catch (err) {
     console.error('Save error:', err.message);
